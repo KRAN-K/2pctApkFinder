@@ -5,7 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalLayoutApi
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +29,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val categories = mapOf(
+    "Browsers" to "browser", "Video Players" to "video player", "Music" to "music player",
+    "Games" to "game", "Emulators" to "emulator", "Launchers" to "launcher",
+    "File Managers" to "file manager", "Keyboards" to "keyboard", "Messaging" to "messenger",
+    "Maps & Navigation" to "maps", "Camera & Photos" to "camera", "Notes" to "notes",
+    "VPN & Privacy" to "vpn", "Android TV" to "android tv", "Ebook Readers" to "ebook reader",
+    "Tools" to "tools", "Security" to "security", "Terminal" to "terminal"
+)
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Screen() {
     val ctx = LocalContext.current
@@ -55,12 +68,19 @@ fun Screen() {
     Column(Modifier.padding(16.dp).statusBarsPadding()) {
         Text("2% APK Finder", style = MaterialTheme.typography.headlineMedium)
         OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            label = { Text("App name or package") }, singleLine = true)
+            label = { Text("App name or package") }, singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { search() }))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(openSourceOnly, { openSourceOnly = it })
             Text("Open-source / community builds only")
-            Spacer(Modifier.weight(1f))
-            Button(onClick = { search() }) { Text("Search") }
+        }
+        Button(onClick = { search() }, Modifier.fillMaxWidth()) { Text("Search") }
+        Text("Categories", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            categories.forEach { (label, term) ->
+                AssistChip(onClick = { query = term; search() }, label = { Text(label) })
+            }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
