@@ -37,7 +37,6 @@ val categories = mapOf(
     "Tools" to "tools", "Security" to "security", "Terminal" to "terminal"
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Screen() {
     val ctx = LocalContext.current
@@ -75,10 +74,18 @@ fun Screen() {
             Text("Open-source / community builds only")
         }
         Button(onClick = { search() }, Modifier.fillMaxWidth()) { Text("Search") }
-        Text("Categories", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            categories.forEach { (label, term) ->
-                AssistChip(onClick = { query = term; search() }, label = { Text(label) })
+        var menuOpen by remember { mutableStateOf(false) }
+        var selectedCat by remember { mutableStateOf("") }
+        Box(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            OutlinedButton(onClick = { menuOpen = true }, Modifier.fillMaxWidth()) {
+                Text(if (selectedCat.isEmpty()) "Categories  ▾" else "$selectedCat  ▾")
+            }
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                categories.forEach { (label, term) ->
+                    DropdownMenuItem(text = { Text(label) }, onClick = {
+                        menuOpen = false; selectedCat = label; query = term; search()
+                    })
+                }
             }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
