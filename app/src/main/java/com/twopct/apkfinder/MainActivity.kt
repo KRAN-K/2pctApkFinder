@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
 val categories = mapOf(
     "Browsers" to "browser", "Video Players" to "video player", "Music" to "music player",
-    "Games" to "game", "Emulators" to "emulator", "Launchers" to "launcher",
+    "Streaming" to "streaming", "Games" to "game", "Emulators" to "emulator", "Launchers" to "launcher",
     "File Managers" to "file manager", "Keyboards" to "keyboard", "Messaging" to "messenger",
     "Maps & Navigation" to "maps", "Camera & Photos" to "camera", "Notes" to "notes",
     "VPN & Privacy" to "vpn", "Android TV" to "android tv", "Ebook Readers" to "ebook reader",
@@ -48,10 +48,12 @@ fun Screen() {
     var results by remember { mutableStateOf(listOf<ApkResult>()) }
 
     fun open(url: String) = ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    var job by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     fun search() {
         if (query.isBlank()) return
         loading = true; error = null
-        scope.launch {
+        job?.cancel()
+        job = scope.launch {
             val r = withContext(Dispatchers.IO) {
                 runCatching {
                     Sources.fdroid(query) + if (openSourceOnly) emptyList() else Sources.apkMirror(query)
@@ -61,6 +63,11 @@ fun Screen() {
             error = r.exceptionOrNull()?.message ?: if (results.isEmpty()) "No results" else null
             loading = false
         }
+    }
+
+    // Auto-populate results shortly after typing stops (or a category is picked)
+    LaunchedEffect(query, openSourceOnly) {
+        if (query.trim().length >= 3) { kotlinx.coroutines.delay(500); search() }
     }
 
     Column(Modifier.padding(16.dp).statusBarsPadding()) {
@@ -83,7 +90,7 @@ fun Screen() {
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 categories.forEach { (label, term) ->
                     DropdownMenuItem(text = { Text(label) }, onClick = {
-                        menuOpen = false; selectedCat = label; query = term; search()
+                        menuOpen = false; selectedCat = label; query = term
                     })
                 }
             }
