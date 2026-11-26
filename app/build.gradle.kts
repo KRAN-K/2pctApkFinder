@@ -9,8 +9,16 @@ android {
         applicationId = "com.twopct.apkfinder"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
+    }
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("apkfinder.keystore")
+            storePassword = "apkfinder"
+            keyAlias = "apkfinder"
+            keyPassword = "apkfinder"
+        }
     }
     buildFeatures { compose = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
